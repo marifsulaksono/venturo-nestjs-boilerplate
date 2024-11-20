@@ -24,6 +24,7 @@ export class CreateCustomersTable1732017757297 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`DROP TABLE IF EXISTS customers`);
     }
 
 }
