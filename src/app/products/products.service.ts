@@ -15,7 +15,7 @@ export class ProductsService {
   async create(request: CreateProductDto): Promise<Product> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-    await queryRunner.startTransaction();
+    await queryRunner.startTransaction(); // db transaction for consistency data
 
     try {
       const product: Product = new Product();
@@ -84,7 +84,7 @@ export class ProductsService {
   async update(id: string, request: UpdateProductDto): Promise<Product> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-    await queryRunner.startTransaction();
+    await queryRunner.startTransaction();  // db transaction for consistency data
 
     try {
       const productUpdate = {
