@@ -12,6 +12,8 @@ import { CustomersModule } from './app/customers/customers.module';
 import { User } from './app/users/users.entity';
 import { Roles } from './app/roles/role.entity';
 import { Customer } from './app/customers/customers.entity';
+import { ProductsModule } from './app/products/products.module';
+import { ProductCategoriesModule } from './app/product-categories/product-categories.module';
 
 config();
 @Module({
@@ -33,6 +35,8 @@ config();
     AuthModule,
     RolesModule,
     CustomersModule,
+    ProductsModule,
+    ProductCategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
