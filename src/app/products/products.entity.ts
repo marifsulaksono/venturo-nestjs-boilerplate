@@ -1,6 +1,7 @@
 import { BeforeInsert, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { v4 as uuidv4 } from 'uuid';
 import { ProductCategory } from "../product-categories/product-categories.entity";
+import { SaleDetail } from "../sales/sales.entity";
 
 @Entity({ name: 'products' })
 export class Product {
@@ -38,8 +39,11 @@ export class Product {
    @DeleteDateColumn({ name: 'deleted_at' })
    deleted_at: Date;
 
-   @OneToMany(() => ProductDetail, product_detail => product_detail.product_id)
+   @OneToMany(() => ProductDetail, product_detail => product_detail.product)
    details: ProductDetail[];
+
+   @OneToMany(() => SaleDetail, sale_detail => sale_detail.product)
+   sale_detail: SaleDetail[];
    
    @BeforeInsert()
   private generateUUID() {
@@ -78,6 +82,9 @@ export class ProductDetail {
  
    @DeleteDateColumn({ name: 'deleted_at' })
    deleted_at: Date;
+
+   @OneToMany(() => SaleDetail, sale_detail => sale_detail.product_detail)
+   sale_detail: SaleDetail[];
    
    @BeforeInsert()
   private generateUUID() {

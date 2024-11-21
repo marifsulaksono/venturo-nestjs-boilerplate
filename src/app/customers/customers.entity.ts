@@ -1,6 +1,7 @@
-import { BeforeInsert, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { v4 as uuidv4 } from 'uuid';
 import { User } from "../users/users.entity";
+import { Sale } from "../sales/sales.entity";
 
 @Entity({ name: 'customers' })
 export class Customer {
@@ -34,6 +35,9 @@ export class Customer {
 
   @DeleteDateColumn({ name: 'deleted_at' })
   deleted_at: Date;
+
+  @OneToMany(() => Sale, sale => sale.customer)
+  sales: Sale[];
 
   @BeforeInsert()
   private generateUUID() {
