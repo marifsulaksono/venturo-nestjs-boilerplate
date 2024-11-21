@@ -58,7 +58,10 @@ export class UserService {
   }
 
   findOneByEmail(email: string): Promise<User> {
-    return this.userRepository.findOneBy({ email });
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    queryBuilder.leftJoinAndSelect('user.role', 'roles')
+    .where('user.email = :email', { email: email });
+    return queryBuilder.getOne();
   }
 
   async update(id: string, request: UpdateUserDto): Promise<User> {

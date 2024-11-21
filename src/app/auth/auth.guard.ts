@@ -11,11 +11,13 @@ import { config } from 'dotenv';
 config();
 
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
     constructor(
         private jwtService: JwtService,
+        private authService: AuthService,
         private reflector: Reflector,
     ) { }
 
@@ -25,27 +27,36 @@ export class AuthGuard implements CanActivate {
             context.getClass(),
         ]);
         if (isPublic) {
-            // 💡 See this condition
             return true;
         }
-
+    
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
         if (!token) {
-            throw new UnauthorizedException();
+            throw new UnauthorizedException('Token not found');
         }
+    
         try {
             const payload = await this.jwtService.verifyAsync(token, {
                 secret: process.env.JWT_SECRET,
             });
-            // 💡 We're assigning the payload to the request object here
-            // so that we can access it in our route handlers
+    
+            // Check if token is invalidated
+            const isTokenInvalidated = await this.authService.isTokenInvalidated(token);
+            if (isTokenInvalidated) {
+                throw new UnauthorizedException('Token invalidated');
+            }
+    
             request['user'] = payload;
-        } catch {
-            throw new UnauthorizedException();
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                throw new UnauthorizedException('Token expired');
+            } else {
+                throw new UnauthorizedException('Invalid token');
+            }
         }
         return true;
-    }
+    }    
 
     private extractTokenFromHeader(request: Request): string | undefined {
         const [type, token] = request.headers.authorization?.split(' ') ?? [];

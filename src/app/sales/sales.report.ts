@@ -5,7 +5,7 @@ import * as ExcelJS from 'exceljs';
 export function getPeriod(startDate: string, endDate: string): [Record<string, any>, string[], Error?] {
    try {
       const start = dayjs(startDate, 'YYYY-MM-DD');
-      const end = dayjs(endDate, 'YYYY-MM-DD').add(1, 'day'); // Include the end date
+      const end = dayjs(endDate, 'YYYY-MM-DD').add(1, 'day');
 
       if (!start.isValid() || !end.isValid()) {
          throw new Error('Invalid date format');
@@ -38,7 +38,7 @@ export function reformatSalesReport(sales: Sale[], periods: string[]): any[] {
       const saleDate = dayjs(sale.created_at).format('YYYY-MM-DD');
 
       for (const detail of sale.details) {
-         if (!detail.product) continue; // Skip if no product relation
+         if (!detail.product) continue;
 
          const { product_category_id: categoryId, name: productName, product_category } = detail.product;
          const categoryName = product_category.name;
@@ -76,7 +76,6 @@ export function reformatSalesReport(sales: Sale[], periods: string[]): any[] {
          const transaction = productMap.transactions[saleDate];
          transaction.total_sales += totalSales;
 
-         // Update totals
          totalPerDate[saleDate] = (totalPerDate[saleDate] || 0) + totalSales;
          total += totalSales;
       }

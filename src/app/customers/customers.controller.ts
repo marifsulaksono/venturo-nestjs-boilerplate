@@ -5,7 +5,7 @@ import { CreateCustomerDto, UpdateCustomerDto } from './customers.dto';
 import { ResponseService } from 'src/shared/services/response.service';
 import { Public } from '../auth/decorators/public.decorator';
 
-@Public()
+
 @Controller('api/v1/customers')
 export class CustomersController {
   constructor(

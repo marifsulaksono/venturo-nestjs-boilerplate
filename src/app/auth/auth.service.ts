@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../users/users.service';
+import { access } from 'fs';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,9 @@ export class AuthService {
             throw new UnauthorizedException('Email atau password salah.');
         }
 
-        const payload = { sub: user.id, email: user.email };
+        console.log("access", user.role.access);
+
+        const payload = { sub: user.id, email: user.email, access: user.role.access };
         return {
             access_token: await this.jwtService.signAsync(payload),
         };

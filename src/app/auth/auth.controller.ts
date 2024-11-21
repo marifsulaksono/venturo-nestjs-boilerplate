@@ -25,8 +25,15 @@ export class AuthController {
     @Public()
     @HttpCode(HttpStatus.OK)
     @Post('login')
-    signIn(@Body() signInDto: Record<string, any>) {
-        return this.authService.signIn(signInDto.username, signInDto.password);
+    async signIn(@Body() signInDto: Record<string, any>, @Res() res: Response) {
+        try {
+            const token = await this.authService.signIn(signInDto.email, signInDto.password);
+            return this.responseService.success(res, token, 'Login successful');
+        } catch (error) {
+            console.log("Error login:", error);
+            return this.responseService.failed(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     @Get('profile')

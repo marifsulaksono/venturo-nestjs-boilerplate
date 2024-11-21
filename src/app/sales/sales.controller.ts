@@ -41,8 +41,8 @@ export class SalesController {
     this.responseService.success(res, sales, 'Sales fetched successfully'); // Menggunakan ResponseService
   }
 
-  @Get('/report')
-  async findAllSaleReport(@Res() res: Response, @Query() query: any) {
+  @Get('/report-menu')
+  async getAllSaleReport(@Res() res: Response, @Query() query: any) {
     const filter = {
       name: query.name,
       start: query.start_date,
@@ -60,8 +60,6 @@ export class SalesController {
   }
 
   @Get('/download/report')
-  @Header('Content-Type', 'application/json')
-  @Header('Content-Disposition', 'attachment; filename="sales-report.xlsx"')
   async ExportAllSaleReport(@Res() res: Response, @Query() query: any) {
     const filter = {
       name: query.name,
