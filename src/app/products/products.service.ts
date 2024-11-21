@@ -77,6 +77,7 @@ export class ProductsService {
   async findOne(id: string): Promise<Product> {
     const queryBuilder = this.productRepository.createQueryBuilder('product');
     queryBuilder.leftJoinAndSelect('product.product_category', 'category')
+    queryBuilder.leftJoinAndSelect('product.details', 'detail')
     .where('product.id = :id', { id: id });
     return await queryBuilder.getOne();
   }
