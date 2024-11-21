@@ -5,6 +5,7 @@ import { Sale, SaleDetail } from './sales.entity';
 import { DataSource, Repository } from 'typeorm';
 import { Product, ProductDetail } from '../products/products.entity';
 import { Customer } from '../customers/customers.entity';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class SalesService {
@@ -67,16 +68,60 @@ export class SalesService {
     queryBuilder.leftJoinAndSelect('sale.customer', 'c');
     queryBuilder.leftJoinAndSelect('sale.details', 'details');
     queryBuilder.leftJoinAndSelect('details.product', 'product');
-    queryBuilder.leftJoinAndSelect('details.product_detail', 'product_detail');
+    queryBuilder.leftJoinAndSelect('product.product_category', 'product_category');
+    
     if (filter.name) {
       queryBuilder.where('c.name LIKE :name', { name: `%${filter.name}%` });
     }
 
-    console.log(queryBuilder.getQuery())
+    if (filter.start) {
+      queryBuilder.andWhere('sale.created_at >= :start', { start: filter.start });
+    }
+
+    if (filter.end) {
+      const adjustedEnd = dayjs(filter.end).add(1, 'day').toISOString();
+      queryBuilder.andWhere('sale.created_at < :end', { end: adjustedEnd });
+    }
+    
+    if (filter.category) {
+      queryBuilder.where('c.name LIKE :name', { name: `%${filter.name}%` });
+    }
+
+    return await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('sale.created_at', 'DESC')
+      .getMany();
+  }
+
+  async findAllWithPagination(filter: any = {}, page: number, limit: number) {
+    const queryBuilder = this.saleRepository.createQueryBuilder('sale');
+    queryBuilder.leftJoinAndSelect('sale.customer', 'c');
+    queryBuilder.leftJoinAndSelect('sale.details', 'details');
+    queryBuilder.leftJoinAndSelect('details.product', 'product');
+    queryBuilder.leftJoinAndSelect('product.product_category', 'product_category');
+    
+    if (filter.name) {
+      queryBuilder.where('c.name LIKE :name', { name: `%${filter.name}%` });
+    }
+
+    if (filter.start) {
+      queryBuilder.andWhere('sale.created_at >= :start', { start: filter.start });
+    }
+
+    if (filter.end) {
+      const adjustedEnd = dayjs(filter.end).add(1, 'day').toISOString();
+      queryBuilder.andWhere('sale.created_at < :end', { end: adjustedEnd });
+    }
+    
+    if (filter.category) {
+      queryBuilder.where('c.name LIKE :name', { name: `%${filter.name}%` });
+    }
 
     const [sales, total] = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
+      .orderBy('sale.created_at', 'DESC')
       .getManyAndCount();
 
       const links = [];

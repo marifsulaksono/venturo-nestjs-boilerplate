@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Query, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Res, Query, Put, Header } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { CreateSaleDto, UpdateSaleDto } from './sales.dto';
 import { Response } from 'express';
 import { Public } from '../auth/decorators/public.decorator';
 import { ResponseService } from 'src/shared/services/response.service';
+import { generateSalesReportExcel, getPeriod, reformatSalesReport } from './sales.report';
 
 @Public()
 @Controller('api/v1/sales')
@@ -28,15 +29,60 @@ export class SalesController {
   async findAll(@Res() res: Response, @Query() query: any) {
     const filter = {
       name: query.name,
-      start: query.start,
-      end: query.end,
+      start: query.start_date,
+      end: query.end_date,
+      category: query.category_id
+    };
+    const page :number =  query.number || 1;
+    const itemPerPage :number =  query.itemPerPage || 10;
+    
+    const sales = await this.saleService.findAllWithPagination(filter, page, itemPerPage);
+
+    this.responseService.success(res, sales, 'Sales fetched successfully'); // Menggunakan ResponseService
+  }
+
+  @Get('/report')
+  async findAllSaleReport(@Res() res: Response, @Query() query: any) {
+    const filter = {
+      name: query.name,
+      start: query.start_date,
+      end: query.end_date,
+      category: query.category_id
     };
     const page :number =  query.number || 1;
     const itemPerPage :number =  query.itemPerPage || 10;
     
     const sales = await this.saleService.findAll(filter, page, itemPerPage);
 
-    this.responseService.success(res, sales, 'Sales fetched successfully'); // Menggunakan ResponseService
+    const [periods, dates, error] = getPeriod(filter.start, filter.end);
+    const formatedReport = reformatSalesReport(sales, dates);
+    this.responseService.success(res, formatedReport, 'Report sales fetched successfully'); // Menggunakan ResponseService
+  }
+
+  @Get('/download/report')
+  @Header('Content-Type', 'application/json')
+  @Header('Content-Disposition', 'attachment; filename="sales-report.xlsx"')
+  async ExportAllSaleReport(@Res() res: Response, @Query() query: any) {
+    const filter = {
+      name: query.name,
+      start: query.start_date,
+      end: query.end_date,
+      category: query.category_id
+    };
+    const page :number =  query.number || 1;
+    const itemPerPage :number =  query.itemPerPage || 10;
+    
+    const sales = await this.saleService.findAll(filter, page, itemPerPage);
+
+    const [periods, dates, error] = getPeriod(filter.start, filter.end);
+    const formatedReport = reformatSalesReport(sales, dates);
+    const workbook = await generateSalesReportExcel(formatedReport, dates);
+
+  // Send the workbook as an Excel file
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="sales-report.xlsx"');
+    await workbook.xlsx.write(res);
+    res.end();
   }
 
   @Get(':id')
