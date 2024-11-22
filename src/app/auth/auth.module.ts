@@ -11,16 +11,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/users.entity';
 import { ResponseService } from 'src/shared/services/response.service';
 import { JwtMiddleware } from 'src/middleware/jwt.middleware';
+import { TokenAuth } from './auth.entity';
+import { UserModule } from '../users/users.module';
 config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([TokenAuth, User]),
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '60s' },
+      secret: process.env.JWT_ACCESS_SECRET,
+      signOptions: { expiresIn: '12h' },
     }),
+    UserModule,
   ],
   providers: [
     AuthService,
@@ -34,11 +37,4 @@ config();
   controllers: [AuthController],
   exports: [AuthService, UserService],
 })
-export class AuthModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(JwtMiddleware)
-      .exclude('api/v1/auth/login') // Exclude certain routes
-      .forRoutes('api/v1/auth/*');
-  }
-}
+export class AuthModule {}

@@ -1,10 +1,10 @@
 import { Roles } from 'src/app/roles/role.entity';
-import { BeforeInsert, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { BeforeInsert, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { Customer } from '../customers/customers.entity';
 
 @Entity({ name: 'users' })
 export class User {
-    
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -32,6 +32,9 @@ export class User {
 
   @DeleteDateColumn({ name: 'deleted_at' })
   deleted_at: Date;
+
+  @OneToOne(() => Customer, customer => customer.user)
+  customer: Customer;
 
   @BeforeInsert()
   private generateUUID() {

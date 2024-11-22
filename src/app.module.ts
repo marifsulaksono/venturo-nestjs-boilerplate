@@ -5,9 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 import { UserModule } from './app/users/users.module';
 import { AuthModule } from './app/auth/auth.module';
-import { AuthService } from './app/auth/auth.service';
-import { ResponseService } from './shared/services/response.service';
 import { RolesModule } from './app/roles/roles.module';
+import { CustomersModule } from './app/customers/customers.module';
+import { ProductsModule } from './app/products/products.module';
+import { ProductCategoriesModule } from './app/product-categories/product-categories.module';
+import { SalesModule } from './app/sales/sales.module';
 
 config();
 @Module({
@@ -28,6 +30,10 @@ config();
     UserModule,
     AuthModule,
     RolesModule,
+    CustomersModule,
+    ProductsModule,
+    ProductCategoriesModule,
+    SalesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

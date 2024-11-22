@@ -14,20 +14,15 @@ export class JwtMiddleware implements NestMiddleware {
 
   async use(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
+    console.log("new request")
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       try {
         // Periksa apakah token sudah kadaluwarsa atau tidak
         const decoded = this.jwtService.verify(token);
-        // Periksa apakah token sudah logout atau belum
-        const isTokenInvalidated = await this.authService.isTokenInvalidated(token);
-        if (isTokenInvalidated) {
-          this.responseService.failed(res, 'Token invalidated', HttpStatus.UNAUTHORIZED);
-        } else {
-          req['user'] = decoded; // Lampirkan user yang didekode ke objek permintaan
-          next();
-        }
+        req['user'] = decoded; // Lampirkan user yang didekode ke objek permintaan
+        next();
       } catch (error) {
         if (error.name === 'TokenExpiredError') {
           this.responseService.failed(res, 'Token expired', HttpStatus.UNAUTHORIZED);

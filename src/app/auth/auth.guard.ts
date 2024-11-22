@@ -6,18 +6,21 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { config } from 'dotenv';
 config();
 
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
+import { AuthService } from './auth.service';
+import { ResponseService } from 'src/shared/services/response.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
     constructor(
         private jwtService: JwtService,
         private reflector: Reflector,
-    ) { }
+        private readonly responseService: ResponseService,
+    ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -25,30 +28,70 @@ export class AuthGuard implements CanActivate {
             context.getClass(),
         ]);
         if (isPublic) {
-            // 💡 See this condition
             return true;
         }
 
         const request = context.switchToHttp().getRequest();
+        const response = context.switchToHttp().getResponse<Response>();
         const token = this.extractTokenFromHeader(request);
         if (!token) {
-            throw new UnauthorizedException();
+            this.responseService.failed(response, 'Token not found', 401);
+            return false;
         }
+
         try {
             const payload = await this.jwtService.verifyAsync(token, {
-                secret: process.env.JWT_SECRET,
+                secret: process.env.JWT_ACCESS_SECRET,
             });
-            // 💡 We're assigning the payload to the request object here
-            // so that we can access it in our route handlers
+
             request['user'] = payload;
-        } catch {
-            throw new UnauthorizedException();
+
+            // Mengecek apakah role sesuai dengan yang dibutuhkan
+            const requiredRoles = this.reflector.get<string>('requiredRoles', context.getHandler());
+            if (requiredRoles && !this.hasRole(payload, requiredRoles)) {
+                this.responseService.failed(response, 'Access Denied', 403);
+                return false;
+            }
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                this.responseService.failed(response, 'Token expired', 401);
+                return false;
+            } else {
+                this.responseService.failed(response, 'Invalid token', 401);
+                return false;
+            }
         }
+
         return true;
     }
 
+    // Fungsi untuk memeriksa token pada header request
     private extractTokenFromHeader(request: Request): string | undefined {
         const [type, token] = request.headers.authorization?.split(' ') ?? [];
         return type === 'Bearer' ? token : undefined;
+    }
+
+    // Fungsi untuk memeriksa apakah pengguna memiliki role yang sesuai
+    private hasRole(user: any, requiredRoles: string): boolean {
+        try {
+            if (requiredRoles === "") {
+                return true;
+            }
+            console.log("user:", user)
+            const accessMap = JSON.parse(user.access);
+            const requiredPermissions = requiredRoles.split(',');
+
+            for (const permission of requiredPermissions) {
+                const [feature, activity] = permission.split('.');
+
+                if (!accessMap[feature] || !accessMap[feature][activity]) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            return false;
+        }
     }
 }
