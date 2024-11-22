@@ -5,6 +5,7 @@ import {
     Headers,
     HttpCode,
     HttpStatus,
+    Ip,
     Post,
     Request,
     Res,
@@ -14,6 +15,7 @@ import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { ResponseService } from 'src/shared/services/response.service';
 import { Response } from 'express';
+import { LoginDto } from './auth.dto';
 
 @Controller('api/v1/auth') //route api/v1/auth
 export class AuthController {
@@ -25,9 +27,9 @@ export class AuthController {
     @Public()
     @HttpCode(HttpStatus.OK)
     @Post('login')
-    async signIn(@Body() signInDto: Record<string, any>, @Res() res: Response) {
+    async signIn(@Ip() ip: string, @Body() loginDto:LoginDto, @Res() res: Response) {
         try {
-            const token = await this.authService.signIn(signInDto.email, signInDto.password);
+            const token = await this.authService.signIn(loginDto.email, loginDto.password, ip);
             return this.responseService.success(res, token, 'Login successful');
         } catch (error) {
             console.log("Error login:", error);
@@ -40,6 +42,20 @@ export class AuthController {
     getProfile(@Request() req) {
         return req.user;
     }
+
+    @Public()
+    @Post('refresh')
+    async refresh(@Headers('authorization') authorization: string, @Res() res: Response) {
+        try {
+            const token = authorization.split(' ')[1];
+            const newToken = await this.authService.refresh(token);
+            return this.responseService.success(res, newToken, 'Refresh token successful');
+        } catch (error) {
+            return this.responseService.failed(res, error.message, error.response.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Public()
     @Post('logout')
     async logout(@Headers('authorization') authorization: string, @Res() res: Response<any>) {
         try {

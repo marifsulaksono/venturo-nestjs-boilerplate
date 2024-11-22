@@ -6,9 +6,10 @@ import { User } from './users.entity';
 import { ResponseService } from 'src/shared/services/response.service';
 import { JwtMiddleware } from 'src/middleware/jwt.middleware';
 import { AuthService } from '../auth/auth.service';
+import { TokenAuth } from '../auth/auth.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [TypeOrmModule.forFeature([User, TokenAuth])],
   controllers: [UserController],
   providers: [UserService,AuthService,ResponseService],
 })
