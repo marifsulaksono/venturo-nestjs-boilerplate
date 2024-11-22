@@ -6,19 +6,20 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { config } from 'dotenv';
 config();
 
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
 import { AuthService } from './auth.service';
+import { ResponseService } from 'src/shared/services/response.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
     constructor(
         private jwtService: JwtService,
-        private authService: AuthService,
         private reflector: Reflector,
+        private readonly responseService: ResponseService,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,9 +32,11 @@ export class AuthGuard implements CanActivate {
         }
 
         const request = context.switchToHttp().getRequest();
+        const response = context.switchToHttp().getResponse<Response>();
         const token = this.extractTokenFromHeader(request);
         if (!token) {
-            throw new UnauthorizedException('Token not found');
+            this.responseService.failed(response, 'Token not found', 401);
+            return false;
         }
 
         try {
@@ -46,13 +49,16 @@ export class AuthGuard implements CanActivate {
             // Mengecek apakah role sesuai dengan yang dibutuhkan
             const requiredRoles = this.reflector.get<string>('requiredRoles', context.getHandler());
             if (requiredRoles && !this.hasRole(payload, requiredRoles)) {
-                throw new UnauthorizedException('Access denied');
+                this.responseService.failed(response, 'Access Denied', 403);
+                return false;
             }
         } catch (error) {
             if (error.name === 'TokenExpiredError') {
-                throw new UnauthorizedException('Token expired');
+                this.responseService.failed(response, 'Token expired', 401);
+                return false;
             } else {
-                throw new UnauthorizedException(error.message);
+                this.responseService.failed(response, 'Invalid token', 401);
+                return false;
             }
         }
 
