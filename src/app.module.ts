@@ -12,6 +12,9 @@ import { ProductCategoriesModule } from './app/product-categories/product-catego
 import { SalesModule } from './app/sales/sales.module';
 import { LogMiddleware } from './middleware/log.middleware';
 import { Logger } from './shared/services/logger.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { LogModule } from './app/log/log.module';
+import { LogService } from './app/log/log.service';
 
 config();
 @Module({
@@ -29,6 +32,8 @@ config();
       migrationsTableName: 'typeorm_migrations',
       migrationsRun: false,
     }),
+    MongooseModule.forRoot(process.env.MONGO_URI),
+    LogModule,
     UserModule,
     AuthModule,
     RolesModule,
@@ -38,7 +43,7 @@ config();
     SalesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, Logger],
+  providers: [AppService, Logger, LogService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
