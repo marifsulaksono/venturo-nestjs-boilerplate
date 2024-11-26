@@ -10,10 +10,17 @@ import { CustomersModule } from './app/customers/customers.module';
 import { ProductsModule } from './app/products/products.module';
 import { ProductCategoriesModule } from './app/product-categories/product-categories.module';
 import { SalesModule } from './app/sales/sales.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 config();
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60 * 1000,
+        limit: 60,
+      }
+    ]),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,

@@ -12,10 +12,11 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Public } from './decorators/public.decorator';
+import { Limit, Public } from './decorators/public.decorator';
 import { ResponseService } from 'src/shared/services/response.service';
 import { Response } from 'express';
 import { LoginDto } from './auth.dto';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 
 @Controller('api/v1/auth') //route api/v1/auth
 export class AuthController {
@@ -24,6 +25,7 @@ export class AuthController {
         private readonly responseService: ResponseService,
     ) { }
 
+    @Throttle({ default: { limit: 2, ttl: 10000 } }) // custom rate limiter
     @Public()
     @HttpCode(HttpStatus.OK)
     @Post('login')
@@ -35,9 +37,9 @@ export class AuthController {
             console.log("Error login:", error);
             return this.responseService.failed(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
     }
 
+    @SkipThrottle() // skip the rate limiter
     @Get('profile')
     getProfile(@Request() req) {
         return req.user;
