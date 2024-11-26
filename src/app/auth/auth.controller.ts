@@ -44,6 +44,30 @@ export class AuthController {
     }
 
     @Public()
+    @Post('forgot-password')
+    async forgotPassword(@Body('email') email: string, @Res() res: Response) {
+        try {
+            await this.authService.forgotPassword(email);
+            return this.responseService.success(res, null, 'Email sent successfully');
+        } catch (error) {
+            console.log("Error forgot password:", error);
+            return this.responseService.failed(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Public()
+    @Post('forgot-password-sg')
+    async forgotPasswordSendgrid(@Body('email') email: string, @Res() res: Response) {
+        try {
+            await this.authService.forgotPassword(email);
+            return this.responseService.success(res, null, 'Email sent successfully');
+        } catch (error) {
+            console.log("Error forgot password:", error);
+            return this.responseService.failed(res, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Public()
     @Post('refresh')
     async refresh(@Headers('authorization') authorization: string, @Res() res: Response) {
         try {

@@ -5,6 +5,7 @@ import { UserService } from '../users/users.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenAuth } from './auth.entity';
 import { Repository } from 'typeorm';
+import { sendEmail, sendGridEmail } from 'src/shared/utils/mail';
 
 @Injectable()
 export class AuthService {
@@ -73,6 +74,28 @@ export class AuthService {
 
     async getTokenByUserIdAndIP(userId: string, ip: string): Promise<TokenAuth> {
         return await this.authRepository.findOneBy({ user_id: userId, ip: ip });
+    }
+
+    async forgotPassword(email: string): Promise<any> {
+        console.log("Email", email);
+        const user = await this.userService.findOneByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException('Email not found');
+        }
+
+        sendEmail(user.email, 'Forgot Password', `Hello ${user.username}, your recovery password link is : http://localhost:3000/reset-password/${user.id}`, '');
+        return
+    }
+
+    async forgotPasswordSendgrid(email: string): Promise<any> {
+        console.log("Email", email);
+        const user = await this.userService.findOneByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException('Email not found');
+        }
+
+        sendGridEmail(user.email, 'Forgot Password', `Hello ${user.username}, your recovery password link is : http://localhost:3000/reset-password/${user.id}`, '');
+        return
     }
 
     async refresh(token: string ): Promise<any> {
