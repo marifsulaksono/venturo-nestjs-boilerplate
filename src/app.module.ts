@@ -15,6 +15,7 @@ import { Logger } from './shared/services/logger.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LogModule } from './app/log/log.module';
 import { LogService } from './app/log/log.service';
+import { Log, LogSchema } from './types/log.schema';
 
 config();
 @Module({
@@ -33,6 +34,7 @@ config();
       migrationsRun: false,
     }),
     MongooseModule.forRoot(process.env.MONGO_URI),
+    MongooseModule.forFeature([{ name: Log.name, schema: LogSchema }]),
     LogModule,
     UserModule,
     AuthModule,
